@@ -4,20 +4,31 @@ This document tracks all the fixes applied to make the framework work on Google 
 
 ## Latest Fixes (Ready for Testing)
 
-### 1. Config Structure Flattening (Commit: 5af20a8)
-**Problem:** `KeyError: 'num_steps_per_env'` persisted even with validation code.
-- rsl_rl OnPolicyRunner expects flat config dict: `cfg["num_steps_per_env"]`
-- But our code created nested structure: `cfg["runner"]["num_steps_per_env"]`
-- Python's nested class inheritance + `class_to_dict()` creates nested dicts
+### 1. Config Structure - Hybrid Nested+Flat (Commit: 5a899c7)
+**Problem:** `KeyError: 'algorithm'` after flattening config.
+- rsl_rl OnPolicyRunner actually expects BOTH structures:
+  - Flat keys at top level: `cfg["num_steps_per_env"]`
+  - Nested sections: `cfg["algorithm"]`, `cfg["policy"]`, `cfg["runner"]`
+- Previous fix only flattened, removing nested sections
 
-**Solution:** Flatten the config dictionary before passing to OnPolicyRunner:
-1. Extract all attributes from `train_cfg.runner`, `train_cfg.algorithm`, `train_cfg.policy`
-2. Merge them into a single flat dictionary at top level
-3. Add fallbacks for any missing required fields
+**Solution:** Create hybrid config dict with BOTH structures:
+```python
+{
+  # Flat keys at top level
+  "num_steps_per_env": 24,
+  "learning_rate": 0.001,
+  "clip_param": 0.2,
+
+  # ALSO nested sections
+  "algorithm": {"learning_rate": 0.001, ...},
+  "policy": {"init_noise_std": 0.8, ...},
+  "runner": {"num_steps_per_env": 24, ...}
+}
+```
 
 **Files:** `legged_gym/scripts/train_mujoco.py`
 
-**Impact:** Config now has correct flat structure that rsl_rl expects.
+**Impact:** Config now has both nested sections AND flat keys that rsl_rl expects.
 
 ### 2. PPO Config Missing Attributes (Commit: a319d33)
 **Problem:** `KeyError: 'num_steps_per_env'` when creating OnPolicyRunner.
@@ -138,7 +149,9 @@ When testing on Colab, verify:
 ## Commit History
 
 ```
-5af20a8 - Fix config structure: flatten nested configs for rsl_rl runner (CRITICAL FIX)
+5a899c7 - Fix config: provide both nested sections AND flat keys for rsl_rl (CRITICAL FIX)
+eb36e16 - Update documentation with config flattening fix
+5af20a8 - Fix config structure: flatten nested configs for rsl_rl runner
 81c1b9e - Add robust config validation and fallbacks for rsl_rl runner
 a8bfd12 - Update documentation with PPO config fix
 a319d33 - Fix missing PPO config attributes for rsl_rl runner
