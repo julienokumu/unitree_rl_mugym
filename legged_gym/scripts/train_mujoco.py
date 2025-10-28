@@ -124,53 +124,63 @@ def train(args):
 
     train_cfg_dict = class_to_dict(train_cfg)
 
-    # Ensure all required runner config fields are present
-    # (class_to_dict may not properly handle nested class inheritance)
-    required_runner_fields = {
+    # rsl_rl OnPolicyRunner expects a flat dictionary structure, not nested
+    # We need to flatten runner, algorithm, and policy configs
+    flat_cfg = {}
+
+    # Flatten runner config
+    if 'runner' in train_cfg_dict and isinstance(train_cfg_dict['runner'], dict):
+        flat_cfg.update(train_cfg_dict['runner'])
+    else:
+        # Manually extract runner attributes
+        runner_attrs = [attr for attr in dir(train_cfg.runner) if not attr.startswith('_')]
+        for attr in runner_attrs:
+            flat_cfg[attr] = getattr(train_cfg.runner, attr)
+
+    # Flatten algorithm config
+    if 'algorithm' in train_cfg_dict and isinstance(train_cfg_dict['algorithm'], dict):
+        flat_cfg.update(train_cfg_dict['algorithm'])
+    else:
+        # Manually extract algorithm attributes
+        algorithm_attrs = [attr for attr in dir(train_cfg.algorithm) if not attr.startswith('_')]
+        for attr in algorithm_attrs:
+            flat_cfg[attr] = getattr(train_cfg.algorithm, attr)
+
+    # Flatten policy config
+    if 'policy' in train_cfg_dict and isinstance(train_cfg_dict['policy'], dict):
+        flat_cfg.update(train_cfg_dict['policy'])
+    else:
+        # Manually extract policy attributes
+        policy_attrs = [attr for attr in dir(train_cfg.policy) if not attr.startswith('_')]
+        for attr in policy_attrs:
+            flat_cfg[attr] = getattr(train_cfg.policy, attr)
+
+    # Add top-level attributes (like seed, runner_class_name)
+    for key in ['seed', 'runner_class_name']:
+        if hasattr(train_cfg, key):
+            flat_cfg[key] = getattr(train_cfg, key)
+
+    # Ensure all critical fields are present
+    required_fields = {
         'num_steps_per_env': 24,
         'algorithm_class_name': 'PPO',
         'policy_class_name': 'ActorCriticRecurrent',
         'max_iterations': 10000,
         'save_interval': 500,
-        'experiment_name': 'g1_colab_training',
-        'run_name': 'run_001',
-        'resume': False,
-        'load_run': -1,
-        'checkpoint': -1,
     }
 
-    if 'runner' not in train_cfg_dict or not isinstance(train_cfg_dict['runner'], dict):
-        train_cfg_dict['runner'] = {}
-
-    for key, default_value in required_runner_fields.items():
-        if key not in train_cfg_dict['runner']:
-            # Try to get from config class first
-            if hasattr(train_cfg.runner, key):
-                train_cfg_dict['runner'][key] = getattr(train_cfg.runner, key)
-            else:
-                train_cfg_dict['runner'][key] = default_value
-            print(f"[WARNING] Added missing runner config: {key} = {train_cfg_dict['runner'][key]}")
-
-    # Also ensure algorithm config is present
-    if 'algorithm' not in train_cfg_dict or not isinstance(train_cfg_dict['algorithm'], dict):
-        train_cfg_dict['algorithm'] = {}
-        algorithm_attrs = [attr for attr in dir(train_cfg.algorithm) if not attr.startswith('_')]
-        for attr in algorithm_attrs:
-            train_cfg_dict['algorithm'][attr] = getattr(train_cfg.algorithm, attr)
-
-    # Ensure policy config is present
-    if 'policy' not in train_cfg_dict or not isinstance(train_cfg_dict['policy'], dict):
-        train_cfg_dict['policy'] = {}
-        policy_attrs = [attr for attr in dir(train_cfg.policy) if not attr.startswith('_')]
-        for attr in policy_attrs:
-            train_cfg_dict['policy'][attr] = getattr(train_cfg.policy, attr)
+    for key, default_value in required_fields.items():
+        if key not in flat_cfg:
+            flat_cfg[key] = default_value
+            print(f"[WARNING] Added missing config: {key} = {default_value}")
 
     print(f"\nTraining configuration:")
-    print(f"  - Policy: {train_cfg_dict['policy'].get('policy_class_name', train_cfg_dict['runner'].get('policy_class_name'))}")
-    print(f"  - Steps per env: {train_cfg_dict['runner']['num_steps_per_env']}")
-    print(f"  - Learning rate: {train_cfg_dict['algorithm'].get('learning_rate', 'N/A')}")
+    print(f"  - Policy: {flat_cfg.get('policy_class_name')}")
+    print(f"  - Steps per env: {flat_cfg.get('num_steps_per_env')}")
+    print(f"  - Learning rate: {flat_cfg.get('learning_rate', 'N/A')}")
+    print(f"  - Algorithm: {flat_cfg.get('algorithm_class_name')}")
 
-    runner = OnPolicyRunner(env, train_cfg_dict, log_dir, device=args.rl_device)
+    runner = OnPolicyRunner(env, flat_cfg, log_dir, device=args.rl_device)
 
     # Load checkpoint if resuming
     if train_cfg.runner.resume:
