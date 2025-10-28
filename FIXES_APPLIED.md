@@ -4,7 +4,23 @@ This document tracks all the fixes applied to make the framework work on Google 
 
 ## Latest Fixes (Ready for Testing)
 
-### 1. Model Loading Issue - Actuators Not Created (Commit: a5fbaf8)
+### 1. PPO Config Missing Attributes (Commit: a319d33)
+**Problem:** `KeyError: 'num_steps_per_env'` when creating OnPolicyRunner.
+- Nested class inheritance in Python doesn't automatically inherit parent nested class attributes
+- The `class_to_dict()` wasn't finding inherited attributes from base classes
+- Missing: `num_steps_per_env`, `algorithm_class_name`, and other required runner config
+
+**Solution:** Explicitly define all required attributes in MujocoG1RoughCfgPPO:
+- `num_steps_per_env = 24`
+- `algorithm_class_name = 'PPO'`
+- `policy_class_name = "ActorCriticRecurrent"`
+- Resume settings: `resume`, `load_run`, `checkpoint`
+
+**Files:** `legged_gym/envs/g1/mujoco_g1_config.py`
+
+**Impact:** PPO runner can now initialize with complete configuration.
+
+### 2. Model Loading Issue - Actuators Not Created (Commit: a5fbaf8)
 **Problem:** URDF loading doesn't create Mujoco actuators, causing multiple errors:
 - `model.nu = 0` (no actuators found)
 - All PD gains = 0.0 (no control!)
@@ -107,6 +123,8 @@ When testing on Colab, verify:
 ## Commit History
 
 ```
+a319d33 - Fix missing PPO config attributes for rsl_rl runner
+030bcfe - Update documentation with latest model loading fix
 a5fbaf8 - Fix model loading: prefer XML over URDF to ensure actuators are loaded
 0ba2142 - Add comprehensive documentation of all fixes applied
 f06c5b5 - Fix mujoco import order in G1 environment
