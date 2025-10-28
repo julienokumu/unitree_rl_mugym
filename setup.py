@@ -9,7 +9,7 @@ setup(name='unitree_rl_mugym',
       author_email='support@unitree.com',
       description='Mujoco-based RL environments for Unitree Robots - Train on Colab, visualize locally',
       url='https://github.com/julienokumu/unitree_rl_mugym',
-      install_requires=['isaacgym', 'rsl-rl', 'matplotlib', 'numpy==1.20', 'tensorboard', 'mujoco==3.2.3', 'pyyaml', 'scipy'],
+      install_requires=['isaacgym', 'rsl-rl-lib', 'matplotlib', 'numpy>=1.20', 'tensorboard', 'mujoco==3.2.3', 'pyyaml', 'scipy'],
       extras_require={
-          'mujoco_only': ['rsl-rl', 'matplotlib', 'numpy==1.20', 'tensorboard', 'mujoco==3.2.3', 'pyyaml', 'scipy', 'torch']
+          'mujoco_only': ['rsl-rl-lib', 'matplotlib', 'numpy>=1.20', 'tensorboard', 'mujoco==3.2.3', 'pyyaml', 'scipy', 'torch']
       })

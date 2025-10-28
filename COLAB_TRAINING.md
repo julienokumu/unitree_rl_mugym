@@ -58,11 +58,11 @@ If you prefer command-line training in Colab:
 
 ```bash
 # 1. Clone repository
-!git clone https://github.com/unitreerobotics/unitree_rl_gym.git
-%cd unitree_rl_gym
+!git clone https://github.com/julienokumu/unitree_rl_mugym.git
+%cd unitree_rl_mugym
 
 # 2. Install dependencies (Mujoco only, no Isaac Gym!)
-!pip install mujoco==3.2.3 scipy pyyaml tensorboard rsl-rl
+!pip install mujoco==3.2.3 scipy pyyaml tensorboard rsl-rl-lib
 !pip install -e . --no-deps
 
 # 3. Train policy

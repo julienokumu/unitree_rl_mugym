@@ -89,7 +89,7 @@ git clone https://github.com/julienokumu/unitree_rl_mugym.git
 cd unitree_rl_mugym
 
 # Install dependencies (Mujoco-only, no Isaac Gym)
-pip install mujoco==3.2.3 scipy pyyaml tensorboard rsl-rl torch
+pip install mujoco==3.2.3 scipy pyyaml tensorboard rsl-rl-lib torch
 pip install -e .
 
 # Train policy
@@ -145,7 +145,7 @@ git clone https://github.com/julienokumu/unitree_rl_mugym.git
 cd unitree_rl_mugym
 
 # Install Mujoco-only dependencies
-pip install mujoco==3.2.3 scipy pyyaml tensorboard rsl-rl torch matplotlib numpy==1.20
+pip install mujoco==3.2.3 scipy pyyaml tensorboard rsl-rl-lib torch matplotlib numpy==1.20
 pip install -e .
 
 # Or install everything (including Isaac Gym if you have it)
