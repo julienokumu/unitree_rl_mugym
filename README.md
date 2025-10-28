@@ -64,6 +64,7 @@ We've extended the framework with **Mujoco-based training environments** that:
 
 1. **Open Colab Notebook**
    - Upload `notebooks/train_g1_colab.ipynb` to [Google Colab](https://colab.research.google.com/)
+   - Or open directly: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/julienokumu/unitree_rl_mugym/blob/main/notebooks/train_g1_colab.ipynb)
 
 2. **Run All Cells**
    - Training takes 2-6 hours depending on hardware
@@ -84,7 +85,7 @@ We've extended the framework with **Mujoco-based training environments** that:
 
 ```bash
 # Clone repository
-git clone https://github.com/YOUR_USERNAME/unitree_rl_mugym.git
+git clone https://github.com/julienokumu/unitree_rl_mugym.git
 cd unitree_rl_mugym
 
 # Install dependencies (Mujoco-only, no Isaac Gym)
@@ -132,7 +133,7 @@ Currently, only **G1** has Mujoco support. Other robots can be added by followin
 ```bash
 # In Colab notebook
 !pip install mujoco==3.2.3 scipy pyyaml tensorboard rsl-rl
-!git clone https://github.com/YOUR_USERNAME/unitree_rl_mugym.git
+!git clone https://github.com/julienokumu/unitree_rl_mugym.git
 !pip install -e unitree_rl_mugym --no-deps
 ```
 
@@ -140,7 +141,7 @@ Currently, only **G1** has Mujoco support. Other robots can be added by followin
 
 ```bash
 # Clone repository
-git clone https://github.com/YOUR_USERNAME/unitree_rl_mugym.git
+git clone https://github.com/julienokumu/unitree_rl_mugym.git
 cd unitree_rl_mugym
 
 # Install Mujoco-only dependencies
@@ -408,7 +409,7 @@ Contributions are welcome! Areas where we'd love help:
   title={Unitree RL MuGym: Mujoco-based Training for Unitree Robots},
   author={Your Name},
   year={2025},
-  url={https://github.com/YOUR_USERNAME/unitree_rl_mugym},
+  url={https://github.com/julienokumu/unitree_rl_mugym},
   note={Extended from Unitree RL Gym with Mujoco support for Google Colab training}
 }
 ```
@@ -451,8 +452,8 @@ See [LICENSE](LICENSE) for details.
 
 ## 📧 Contact
 
-- **Issues**: [GitHub Issues](https://github.com/YOUR_USERNAME/unitree_rl_mugym/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/YOUR_USERNAME/unitree_rl_mugym/discussions)
+- **Issues**: [GitHub Issues](https://github.com/julienokumu/unitree_rl_mugym/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/julienokumu/unitree_rl_mugym/discussions)
 - **Original Framework**: [Unitree RL Gym Issues](https://github.com/unitreerobotics/unitree_rl_gym/issues)
 
 ---
