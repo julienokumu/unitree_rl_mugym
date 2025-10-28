@@ -39,9 +39,30 @@ class MujocoG1RoughCfgPPO(G1RoughCfgPPO):
     Uses same hyperparameters as Isaac Gym version.
     """
 
+    class policy(G1RoughCfgPPO.policy):
+        # Inherit all policy settings from parent
+        # G1 uses: init_noise_std=0.8, actor/critic hidden_dims=[32], activation='elu'
+        # rnn_type='lstm', rnn_hidden_size=64, rnn_num_layers=1
+        pass
+
+    class algorithm(G1RoughCfgPPO.algorithm):
+        # Inherit all algorithm settings from parent
+        # G1 uses: entropy_coef=0.01, plus all base settings
+        pass
+
     class runner(G1RoughCfgPPO.runner):
-        experiment_name = 'g1_mujoco'
-        # Training may take longer on CPU, but keeping same iteration count
+        # Explicitly inherit required attributes to ensure they're present
+        policy_class_name = "ActorCriticRecurrent"  # From G1RoughCfgPPO
+        algorithm_class_name = 'PPO'  # From LeggedRobotCfgPPO
+        num_steps_per_env = 24  # From LeggedRobotCfgPPO
+
+        # Mujoco-specific overrides
+        experiment_name = 'g1_colab_training'
+        run_name = 'run_001'
         max_iterations = 10000
-        # Save more frequently since training is slower
         save_interval = 500
+
+        # Resume settings (from base)
+        resume = False
+        load_run = -1
+        checkpoint = -1
