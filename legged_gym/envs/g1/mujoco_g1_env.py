@@ -5,6 +5,7 @@ Extends MujocoLeggedRobot with G1-specific features
 
 import numpy as np
 import torch
+import mujoco
 from legged_gym.envs.base.mujoco_legged_robot import MujocoLeggedRobot
 
 
@@ -180,7 +181,3 @@ class MujocoG1Robot(MujocoLeggedRobot):
         """
         hip_indices = [1, 2, 7, 8]  # hip_roll and hip_pitch for both legs
         return torch.sum(torch.square(self.dof_pos[:, hip_indices]), dim=1)
-
-
-# Import mujoco here to avoid import errors if not used
-import mujoco
