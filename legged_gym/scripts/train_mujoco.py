@@ -124,41 +124,45 @@ def train(args):
 
     train_cfg_dict = class_to_dict(train_cfg)
 
-    # rsl_rl OnPolicyRunner expects a flat dictionary structure, not nested
-    # We need to flatten runner, algorithm, and policy configs
-    flat_cfg = {}
+    # rsl_rl OnPolicyRunner expects BOTH flat keys AND nested sections
+    # Build a config dict that has both structures
+    final_cfg = {}
 
-    # Flatten runner config
-    if 'runner' in train_cfg_dict and isinstance(train_cfg_dict['runner'], dict):
-        flat_cfg.update(train_cfg_dict['runner'])
-    else:
-        # Manually extract runner attributes
-        runner_attrs = [attr for attr in dir(train_cfg.runner) if not attr.startswith('_')]
-        for attr in runner_attrs:
-            flat_cfg[attr] = getattr(train_cfg.runner, attr)
+    # Build nested sections
+    runner_cfg = {}
+    algorithm_cfg = {}
+    policy_cfg = {}
 
-    # Flatten algorithm config
-    if 'algorithm' in train_cfg_dict and isinstance(train_cfg_dict['algorithm'], dict):
-        flat_cfg.update(train_cfg_dict['algorithm'])
-    else:
-        # Manually extract algorithm attributes
-        algorithm_attrs = [attr for attr in dir(train_cfg.algorithm) if not attr.startswith('_')]
-        for attr in algorithm_attrs:
-            flat_cfg[attr] = getattr(train_cfg.algorithm, attr)
+    # Extract runner attributes
+    runner_attrs = [attr for attr in dir(train_cfg.runner) if not attr.startswith('_')]
+    for attr in runner_attrs:
+        value = getattr(train_cfg.runner, attr)
+        runner_cfg[attr] = value
+        final_cfg[attr] = value  # Also add to top level
 
-    # Flatten policy config
-    if 'policy' in train_cfg_dict and isinstance(train_cfg_dict['policy'], dict):
-        flat_cfg.update(train_cfg_dict['policy'])
-    else:
-        # Manually extract policy attributes
-        policy_attrs = [attr for attr in dir(train_cfg.policy) if not attr.startswith('_')]
-        for attr in policy_attrs:
-            flat_cfg[attr] = getattr(train_cfg.policy, attr)
+    # Extract algorithm attributes
+    algorithm_attrs = [attr for attr in dir(train_cfg.algorithm) if not attr.startswith('_')]
+    for attr in algorithm_attrs:
+        value = getattr(train_cfg.algorithm, attr)
+        algorithm_cfg[attr] = value
+        final_cfg[attr] = value  # Also add to top level
+
+    # Extract policy attributes
+    policy_attrs = [attr for attr in dir(train_cfg.policy) if not attr.startswith('_')]
+    for attr in policy_attrs:
+        value = getattr(train_cfg.policy, attr)
+        policy_cfg[attr] = value
+        final_cfg[attr] = value  # Also add to top level
+
+    # Add nested sections
+    final_cfg['runner'] = runner_cfg
+    final_cfg['algorithm'] = algorithm_cfg
+    final_cfg['policy'] = policy_cfg
 
     # Add top-level attributes (like seed, runner_class_name)
     for key in ['seed', 'runner_class_name']:
         if hasattr(train_cfg, key):
-            flat_cfg[key] = getattr(train_cfg, key)
+            final_cfg[key] = getattr(train_cfg, key)
 
     # Ensure all critical fields are present
     required_fields = {
@@ -170,17 +174,17 @@ def train(args):
     }
 
     for key, default_value in required_fields.items():
-        if key not in flat_cfg:
-            flat_cfg[key] = default_value
+        if key not in final_cfg:
+            final_cfg[key] = default_value
             print(f"[WARNING] Added missing config: {key} = {default_value}")
 
     print(f"\nTraining configuration:")
-    print(f"  - Policy: {flat_cfg.get('policy_class_name')}")
-    print(f"  - Steps per env: {flat_cfg.get('num_steps_per_env')}")
-    print(f"  - Learning rate: {flat_cfg.get('learning_rate', 'N/A')}")
-    print(f"  - Algorithm: {flat_cfg.get('algorithm_class_name')}")
+    print(f"  - Policy: {final_cfg.get('policy_class_name')}")
+    print(f"  - Steps per env: {final_cfg.get('num_steps_per_env')}")
+    print(f"  - Learning rate: {final_cfg.get('learning_rate', 'N/A')}")
+    print(f"  - Algorithm: {final_cfg.get('algorithm_class_name')}")
 
-    runner = OnPolicyRunner(env, flat_cfg, log_dir, device=args.rl_device)
+    runner = OnPolicyRunner(env, final_cfg, log_dir, device=args.rl_device)
 
     # Load checkpoint if resuming
     if train_cfg.runner.resume:
