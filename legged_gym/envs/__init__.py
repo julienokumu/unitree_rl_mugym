@@ -9,9 +9,17 @@ from legged_gym.envs.g1.g1_config import G1RoughCfg, G1RoughCfgPPO
 from legged_gym.envs.g1.g1_env import G1Robot
 from .base.legged_robot import LeggedRobot
 
+# Mujoco-based environments (Colab-compatible, no Isaac Gym required)
+from legged_gym.envs.g1.mujoco_g1_config import MujocoG1RoughCfg, MujocoG1RoughCfgPPO
+from legged_gym.envs.g1.mujoco_g1_env import MujocoG1Robot
+
 from legged_gym.utils.task_registry import task_registry
 
+# Isaac Gym environments (require local GPU)
 task_registry.register( "go2", LeggedRobot, GO2RoughCfg(), GO2RoughCfgPPO())
 task_registry.register( "h1", H1Robot, H1RoughCfg(), H1RoughCfgPPO())
 task_registry.register( "h1_2", H1_2Robot, H1_2RoughCfg(), H1_2RoughCfgPPO())
 task_registry.register( "g1", G1Robot, G1RoughCfg(), G1RoughCfgPPO())
+
+# Mujoco environments (Colab-compatible, CPU-based)
+task_registry.register( "g1_mujoco", MujocoG1Robot, MujocoG1RoughCfg(), MujocoG1RoughCfgPPO())
