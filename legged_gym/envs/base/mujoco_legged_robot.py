@@ -102,12 +102,51 @@ class MujocoLeggedRobot(VecEnv):
         self.model.opt.timestep = self.sim_dt
 
         # Store model info
-        self.num_dof = self.model.nv - 6  # Exclude floating base
         self.num_bodies = self.model.nbody
 
-        # Get DOF names
-        self.dof_names = [mujoco.mj_id2name(self.model, mujoco.mjtObj.mjOBJ_JOINT, i)
-                          for i in range(self.model.njnt) if self.model.jnt_type[i] != 0]  # Exclude free joint
+        # Get DOF names - use actuator names as they map directly to controlled DOFs
+        # This is more reliable than counting joints
+        if self.model.nu > 0:
+            # Use actuators (most reliable for control)
+            self.num_dof = self.model.nu
+            self.dof_names = []
+            for i in range(self.model.nu):
+                actuator_name = mujoco.mj_id2name(self.model, mujoco.mjtObj.mjOBJ_ACTUATOR, i)
+                if actuator_name is None:
+                    actuator_name = f"actuator_{i}"
+                self.dof_names.append(actuator_name)
+        else:
+            # Fallback: count non-free joints
+            self.dof_names = []
+            for i in range(self.model.njnt):
+                if self.model.jnt_type[i] == 0:  # Skip free joint (floating base)
+                    continue
+                joint_name = mujoco.mj_id2name(self.model, mujoco.mjtObj.mjOBJ_JOINT, i)
+                if joint_name is None:
+                    joint_name = f"joint_{i}"
+                # Each hinge/slide joint = 1 DOF
+                if self.model.jnt_type[i] in [1, 2]:  # Hinge or slide
+                    self.dof_names.append(joint_name)
+
+            self.num_dof = len(self.dof_names)
+
+        # Safety check
+        if self.num_dof == 0:
+            print("[WARNING] No DOFs found, using nv - 6 as last resort")
+            self.num_dof = max(0, self.model.nv - 6)
+            self.dof_names = [f"dof_{i}" for i in range(self.num_dof)]
+
+        # Validate against config
+        expected_dof = self.cfg.env.num_actions
+        if self.num_dof != expected_dof:
+            print(f"[WARNING] Model has {self.num_dof} DOFs but config expects {expected_dof}")
+            print(f"[WARNING] Using config value {expected_dof}")
+            self.num_dof = expected_dof
+            # Pad or trim dof_names
+            if len(self.dof_names) < self.num_dof:
+                self.dof_names.extend([f"dof_{i}" for i in range(len(self.dof_names), self.num_dof)])
+            elif len(self.dof_names) > self.num_dof:
+                self.dof_names = self.dof_names[:self.num_dof]
 
         # Extract PD gains from config
         self._setup_pd_control()
