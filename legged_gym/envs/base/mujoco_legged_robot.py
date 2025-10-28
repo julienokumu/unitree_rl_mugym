@@ -88,17 +88,23 @@ class MujocoLeggedRobot(VecEnv):
         self.push_interval = int(cfg.domain_rand.push_interval_s / self.dt)
 
     def _load_mujoco_model(self):
-        """Load Mujoco model from URDF"""
-        # Get URDF path
-        urdf_path = self.cfg.asset.file.replace('{LEGGED_GYM_ROOT_DIR}', LEGGED_GYM_ROOT_DIR)
+        """Load Mujoco model from URDF or XML"""
+        # Get asset path
+        asset_path = self.cfg.asset.file.replace('{LEGGED_GYM_ROOT_DIR}', LEGGED_GYM_ROOT_DIR)
 
-        # Convert URDF to Mujoco XML if needed
-        if urdf_path.endswith('.urdf'):
-            # Load URDF into Mujoco
-            self.model = mujoco.MjModel.from_xml_path(urdf_path)
-        else:
-            self.model = mujoco.MjModel.from_xml_path(urdf_path)
+        # Prefer XML file if available (has proper actuators defined)
+        # URDF loading in Mujoco doesn't automatically create actuators
+        if asset_path.endswith('.urdf'):
+            xml_path = asset_path.replace('.urdf', '.xml')
+            if os.path.exists(xml_path):
+                print(f"[MujocoLeggedRobot] Found compiled XML file, using: {xml_path}")
+                asset_path = xml_path
+            else:
+                print(f"[MujocoLeggedRobot] No XML found, loading URDF: {asset_path}")
+                print("[WARNING] URDF loading may not create actuators. Consider pre-compiling to XML.")
 
+        # Load model
+        self.model = mujoco.MjModel.from_xml_path(asset_path)
         self.model.opt.timestep = self.sim_dt
 
         # Store model info
