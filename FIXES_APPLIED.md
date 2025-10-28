@@ -4,7 +4,22 @@ This document tracks all the fixes applied to make the framework work on Google 
 
 ## Latest Fixes (Ready for Testing)
 
-### 1. PPO Config Missing Attributes (Commit: a319d33)
+### 1. Config Structure Flattening (Commit: 5af20a8)
+**Problem:** `KeyError: 'num_steps_per_env'` persisted even with validation code.
+- rsl_rl OnPolicyRunner expects flat config dict: `cfg["num_steps_per_env"]`
+- But our code created nested structure: `cfg["runner"]["num_steps_per_env"]`
+- Python's nested class inheritance + `class_to_dict()` creates nested dicts
+
+**Solution:** Flatten the config dictionary before passing to OnPolicyRunner:
+1. Extract all attributes from `train_cfg.runner`, `train_cfg.algorithm`, `train_cfg.policy`
+2. Merge them into a single flat dictionary at top level
+3. Add fallbacks for any missing required fields
+
+**Files:** `legged_gym/scripts/train_mujoco.py`
+
+**Impact:** Config now has correct flat structure that rsl_rl expects.
+
+### 2. PPO Config Missing Attributes (Commit: a319d33)
 **Problem:** `KeyError: 'num_steps_per_env'` when creating OnPolicyRunner.
 - Nested class inheritance in Python doesn't automatically inherit parent nested class attributes
 - The `class_to_dict()` wasn't finding inherited attributes from base classes
@@ -123,6 +138,9 @@ When testing on Colab, verify:
 ## Commit History
 
 ```
+5af20a8 - Fix config structure: flatten nested configs for rsl_rl runner (CRITICAL FIX)
+81c1b9e - Add robust config validation and fallbacks for rsl_rl runner
+a8bfd12 - Update documentation with PPO config fix
 a319d33 - Fix missing PPO config attributes for rsl_rl runner
 030bcfe - Update documentation with latest model loading fix
 a5fbaf8 - Fix model loading: prefer XML over URDF to ensure actuators are loaded
