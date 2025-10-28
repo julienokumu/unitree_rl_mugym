@@ -3,10 +3,18 @@ import copy
 import torch
 import numpy as np
 import random
-from isaacgym import gymapi
-from isaacgym import gymutil
 
 from legged_gym import LEGGED_GYM_ROOT_DIR, LEGGED_GYM_ENVS_DIR
+
+# Isaac Gym imports (optional - only needed for Isaac Gym environments)
+try:
+    from isaacgym import gymapi
+    from isaacgym import gymutil
+    ISAAC_GYM_AVAILABLE = True
+except ImportError:
+    ISAAC_GYM_AVAILABLE = False
+    gymapi = None
+    gymutil = None
 
 def class_to_dict(obj) -> dict:
     if not  hasattr(obj,"__dict__"):
@@ -47,6 +55,10 @@ def set_seed(seed):
     torch.cuda.manual_seed_all(seed)
 
 def parse_sim_params(args, cfg):
+    """Parse simulation parameters (Isaac Gym only)"""
+    if not ISAAC_GYM_AVAILABLE:
+        raise ImportError("parse_sim_params() requires Isaac Gym to be installed")
+
     # code from Isaac Gym Preview 2
     # initialize sim params
     sim_params = gymapi.SimParams()
@@ -120,6 +132,10 @@ def update_cfg_from_args(env_cfg, cfg_train, args):
     return env_cfg, cfg_train
 
 def get_args():
+    """Parse arguments for Isaac Gym training (Isaac Gym only)"""
+    if not ISAAC_GYM_AVAILABLE:
+        raise ImportError("get_args() requires Isaac Gym to be installed. For Mujoco training, use train_mujoco.py which has its own argument parser.")
+
     custom_parameters = [
         {"name": "--task", "type": str, "default": "go2", "help": "Resume training or start testing from a checkpoint. Overrides config file if provided."},
         {"name": "--resume", "action": "store_true", "default": False,  "help": "Resume training from a checkpoint"},
@@ -127,7 +143,7 @@ def get_args():
         {"name": "--run_name", "type": str,  "help": "Name of the run. Overrides config file if provided."},
         {"name": "--load_run", "type": str,  "help": "Name of the run to load when resume=True. If -1: will load the last run. Overrides config file if provided."},
         {"name": "--checkpoint", "type": int,  "help": "Saved model checkpoint number. If -1: will load the last checkpoint. Overrides config file if provided."},
-        
+
         {"name": "--headless", "action": "store_true", "default": False, "help": "Force display off at all times"},
         {"name": "--horovod", "action": "store_true", "default": False, "help": "Use horovod for multi-gpu training"},
         {"name": "--rl_device", "type": str, "default": "cuda:0", "help": 'Device used by the RL algorithm, (cpu, gpu, cuda:0, cuda:1 etc..)'},
