@@ -4,7 +4,23 @@ This document tracks all the fixes applied to make the framework work on Google 
 
 ## Latest Fixes (Ready for Testing)
 
-### 1. DOF Counting Mismatch (Commit: 941976f)
+### 1. Model Loading Issue - Actuators Not Created (Commit: a5fbaf8)
+**Problem:** URDF loading doesn't create Mujoco actuators, causing multiple errors:
+- `model.nu = 0` (no actuators found)
+- All PD gains = 0.0 (no control!)
+- Wrong qpos structure (12 instead of 19 for floating base + 12 joints)
+- `ValueError: could not broadcast input array from shape (12,) into shape (5,)`
+
+**Solution:** Automatically prefer pre-compiled XML files over URDF:
+1. Check if a `.xml` file exists alongside the `.urdf`
+2. If found, use the XML (has actuators explicitly defined)
+3. Otherwise, load URDF with warning
+
+**Files:** `legged_gym/envs/base/mujoco_legged_robot.py`
+
+**Impact:** Model now loads with 12 actuators, proper PD gains, and correct qpos structure (19 elements).
+
+### 2. DOF Counting Mismatch (Commit: 941976f)
 **Problem:** IndexError when setting up PD gains due to incorrect DOF counting.
 - The code was using `model.nv - 6` which gave 6 DOFs, but G1 expects 12
 - Caused: `IndexError: index 6 is out of bounds for dimension 0 with size 6`
@@ -91,6 +107,8 @@ When testing on Colab, verify:
 ## Commit History
 
 ```
+a5fbaf8 - Fix model loading: prefer XML over URDF to ensure actuators are loaded
+0ba2142 - Add comprehensive documentation of all fixes applied
 f06c5b5 - Fix mujoco import order in G1 environment
 941976f - Fix DOF counting mismatch in Mujoco environment
 74bb4ef - Make all Isaac Gym utils imports optional with fallbacks
