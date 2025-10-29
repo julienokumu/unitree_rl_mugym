@@ -171,8 +171,10 @@ def train(args):
         'policy_class_name': 'ActorCriticRecurrent',
         'max_iterations': 10000,
         'save_interval': 500,
-        'obs_groups': None,  # None means use observation dict keys as groups
-        'privileged_obs_groups': None,  # For privileged observations
+        # obs_groups defines which observation dict keys go to which network
+        # Empty dict means auto-detect from observation dict keys
+        'obs_groups': {},
+        'privileged_obs_groups': {},
     }
 
     for key, default_value in required_fields.items():
