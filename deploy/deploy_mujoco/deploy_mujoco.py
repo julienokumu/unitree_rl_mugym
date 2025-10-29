@@ -133,7 +133,13 @@ if __name__ == "__main__":
     try:
         policy = torch.jit.load(policy_path)
         policy.eval()
-        print("✓ Policy loaded successfully!")
+
+        # Reset LSTM memory if policy has recurrent layers
+        if hasattr(policy, 'reset_memory'):
+            policy.reset_memory()
+            print("✓ Policy loaded successfully (LSTM memory reset)!")
+        else:
+            print("✓ Policy loaded successfully!")
     except Exception as e:
         print(f"✗ Error loading policy: {e}")
         sys.exit(1)
