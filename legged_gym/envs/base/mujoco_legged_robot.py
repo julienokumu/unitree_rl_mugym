@@ -15,6 +15,17 @@ from legged_gym.utils.helpers import class_to_dict
 from .legged_robot_config import LeggedRobotCfg
 
 
+class ObservationDict(dict):
+    """
+    Dictionary wrapper that supports .to(device) method for rsl_rl compatibility.
+    rsl_rl calls obs.to(device) expecting a tensor, but we return a dict.
+    """
+    def to(self, device):
+        """Move all tensors in dict to specified device"""
+        return ObservationDict({k: v.to(device) if hasattr(v, 'to') else v
+                                for k, v in self.items()})
+
+
 class MujocoLeggedRobot(VecEnv):
     """
     Mujoco-based vectorized environment for legged robot locomotion training.
@@ -719,8 +730,10 @@ class MujocoLeggedRobot(VecEnv):
         rsl_rl expects observations as a dict with groups:
         - "policy": observations for the policy network
         - "critic": privileged observations for the critic (if available)
+
+        Returns ObservationDict which supports .to(device) method.
         """
-        obs_dict = {"policy": self.obs_buf}
+        obs_dict = ObservationDict({"policy": self.obs_buf})
 
         # Add privileged observations for critic if available
         if self.privileged_obs_buf is not None:
