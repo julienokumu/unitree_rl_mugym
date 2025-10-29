@@ -412,13 +412,17 @@ class MujocoLeggedRobot(VecEnv):
         if self.privileged_obs_buf is not None:
             self.privileged_obs_buf = torch.clip(self.privileged_obs_buf, -clip_obs, clip_obs)
 
-        return self.obs_buf, self.privileged_obs_buf, self.rew_buf, self.reset_buf, self.extras
+        # Return observations as dictionary for rsl_rl compatibility
+        # rsl_rl expects: (obs_dict, rewards, dones, extras)
+        obs_dict = self.get_observations()
+        return obs_dict, self.rew_buf, self.reset_buf, self.extras
 
     def reset(self):
         """Reset all environments"""
         self._reset_envs(torch.arange(self.num_envs, device=self.device))
         self.compute_observations()
-        return self.obs_buf, self.privileged_obs_buf
+        # Return observations as dictionary for rsl_rl compatibility
+        return self.get_observations()
 
     def _reset_envs(self, env_ids):
         """Reset specific environments"""
