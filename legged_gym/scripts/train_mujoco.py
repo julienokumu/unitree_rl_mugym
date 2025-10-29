@@ -165,6 +165,12 @@ def train(args):
         policy_cfg['class_name'] = final_cfg['policy_class_name']
         final_cfg['policy']['class_name'] = final_cfg['policy_class_name']
 
+    # rsl_rl also expects 'class_name' in algorithm config dict
+    # Get it from algorithm_class_name at top level
+    if 'algorithm_class_name' in final_cfg and 'class_name' not in algorithm_cfg:
+        algorithm_cfg['class_name'] = final_cfg['algorithm_class_name']
+        final_cfg['algorithm']['class_name'] = final_cfg['algorithm_class_name']
+
     # Add top-level attributes (like seed, runner_class_name)
     for key in ['seed', 'runner_class_name']:
         if hasattr(train_cfg, key):
