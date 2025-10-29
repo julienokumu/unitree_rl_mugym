@@ -159,6 +159,12 @@ def train(args):
     final_cfg['algorithm'] = algorithm_cfg
     final_cfg['policy'] = policy_cfg
 
+    # rsl_rl expects 'class_name' in policy config dict
+    # Get it from policy_class_name at top level
+    if 'policy_class_name' in final_cfg and 'class_name' not in policy_cfg:
+        policy_cfg['class_name'] = final_cfg['policy_class_name']
+        final_cfg['policy']['class_name'] = final_cfg['policy_class_name']
+
     # Add top-level attributes (like seed, runner_class_name)
     for key in ['seed', 'runner_class_name']:
         if hasattr(train_cfg, key):
@@ -172,8 +178,11 @@ def train(args):
         'max_iterations': 10000,
         'save_interval': 500,
         # obs_groups defines which observation dict keys go to which network
-        # Empty dict means auto-detect from observation dict keys
-        'obs_groups': {},
+        # Explicitly map observation dict keys to actor/critic
+        'obs_groups': {
+            'policy': ['policy'],  # Policy network uses 'policy' observations
+            'critic': ['critic'],  # Critic network uses 'critic' observations (privileged)
+        },
         'privileged_obs_groups': {},
     }
 
