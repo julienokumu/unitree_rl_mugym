@@ -713,7 +713,21 @@ class MujocoLeggedRobot(VecEnv):
         self._num_actions = value
 
     def get_observations(self):
-        return self.obs_buf
+        """
+        Return observations in dictionary format for rsl_rl.
+
+        rsl_rl expects observations as a dict with groups:
+        - "policy": observations for the policy network
+        - "critic": privileged observations for the critic (if available)
+        """
+        obs_dict = {"policy": self.obs_buf}
+
+        # Add privileged observations for critic if available
+        if self.privileged_obs_buf is not None:
+            obs_dict["critic"] = self.privileged_obs_buf
+
+        return obs_dict
 
     def get_privileged_observations(self):
+        """Return privileged observations (for compatibility)"""
         return self.privileged_obs_buf
