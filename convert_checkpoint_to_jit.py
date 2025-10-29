@@ -71,10 +71,23 @@ def convert_checkpoint(checkpoint_path, output_path):
     num_critic_obs = env_cfg.env.num_privileged_obs or num_obs
     num_actions = env_cfg.env.num_actions
 
+    # Create dummy observation dict for initialization (rsl_rl requirement)
+    dummy_obs = {
+        'policy': torch.zeros(1, num_obs),
+        'critic': torch.zeros(1, num_critic_obs)
+    }
+
+    obs_groups = {
+        'policy': ['policy'],
+        'critic': ['critic']
+    }
+
     actor_critic = ActorCriticRecurrent(
+        obs=dummy_obs,
         num_actor_obs=num_obs,
         num_critic_obs=num_critic_obs,
         num_actions=num_actions,
+        obs_groups=obs_groups,
         actor_hidden_dims=train_cfg.policy.actor_hidden_dims,
         critic_hidden_dims=train_cfg.policy.critic_hidden_dims,
         activation=train_cfg.policy.activation,
