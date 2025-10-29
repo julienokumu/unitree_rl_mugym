@@ -181,8 +181,8 @@ def train(args):
         'num_steps_per_env': 24,
         'algorithm_class_name': 'PPO',
         'policy_class_name': 'ActorCriticRecurrent',
-        'max_iterations': 10000,
-        'save_interval': 500,
+        'max_iterations': 1000,  # ~3.5 hours on T4 GPU
+        'save_interval': 50,  # Save every ~100 minutes
         # obs_groups defines which observation dict keys go to which network
         # Explicitly map observation dict keys to actor/critic
         'obs_groups': {

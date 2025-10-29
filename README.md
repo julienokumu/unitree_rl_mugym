@@ -43,18 +43,28 @@ We've extended the framework with **Mujoco-based training environments** that:
 - Maintain compatibility with the original deployment pipeline
 
 **What's New:**
-- `MujocoLeggedRobot` - Base Mujoco environment class
-- `MujocoG1Robot` - G1-specific Mujoco implementation
-- `train_mujoco.py` - Colab-compatible training script
-- `train_g1_colab.ipynb` - Complete Colab notebook
-- `COLAB_TRAINING.md` - Comprehensive guide
+- `MujocoLeggedRobot` - Base Mujoco environment class with rsl_rl compatibility
+- `MujocoG1Robot` - G1-specific Mujoco implementation with phase-based gait
+- `train_mujoco.py` - Colab-compatible training script with robust config handling
+- `train_g1_mujoco_colab.ipynb` - Complete Colab notebook with step-by-step instructions
+- `ObservationDict` - Custom dict class supporting `.to(device)` for rsl_rl
+- Optional Isaac Gym imports - Framework works without Isaac Gym installed
+- Fallback math functions - Pure PyTorch implementations of Isaac Gym utilities
+
+**Technical Improvements:**
+- ✅ XML model loading (URDF → Mujoco XML with proper actuators)
+- ✅ Dictionary-based observations (policy/critic groups for rsl_rl)
+- ✅ Hybrid config structure (both nested and flat for rsl_rl compatibility)
+- ✅ Robust DOF detection (actuators → joints → config validation)
+- ✅ PD control mapping (automatic gain assignment from config)
+- ✅ Phase-based rewards (encouraging natural bipedal gait)
 
 **What's Preserved:**
 - Original Isaac Gym environments (still work if you have local GPU)
 - Deployment scripts (Sim2Sim, Sim2Real)
-- Configuration system
-- Reward functions
-- Pre-trained models
+- Configuration system and hyperparameters
+- Reward functions and observation spaces
+- Pre-trained models and checkpoint formats
 
 ---
 
@@ -63,15 +73,20 @@ We've extended the framework with **Mujoco-based training environments** that:
 ### Option 1: Train on Google Colab (Recommended)
 
 1. **Open Colab Notebook**
-   - Upload `notebooks/train_g1_colab.ipynb` to [Google Colab](https://colab.research.google.com/)
-   - Or open directly: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/julienokumu/unitree_rl_mugym/blob/main/notebooks/train_g1_colab.ipynb)
+   - Upload `notebooks/train_g1_mujoco_colab.ipynb` to [Google Colab](https://colab.research.google.com/)
+   - Or open directly: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/julienokumu/unitree_rl_mugym/blob/main/notebooks/train_g1_mujoco_colab.ipynb)
 
-2. **Run All Cells**
-   - Training takes 2-6 hours depending on hardware
-   - TensorBoard available for monitoring
-   - Model automatically downloaded at end
+2. **Select GPU Runtime**
+   - Go to `Runtime > Change runtime type > Hardware accelerator > GPU (T4)`
+   - Free tier provides ~13 hours of training time
 
-3. **Visualize Locally**
+3. **Run All Cells**
+   - Training takes ~13 hours for 10,000 iterations (can stop earlier)
+   - Checkpoints saved every 500 iterations
+   - TensorBoard available for real-time monitoring
+   - Models automatically downloadable
+
+4. **Visualize Locally**
    ```bash
    # Install on local machine
    pip install mujoco==3.2.3 torch pyyaml
@@ -315,6 +330,44 @@ unitree_rl_mugym/
 - 🆕 New files added in this fork
 - ✨ Enhanced/modified existing files
 - No icon = Original files from unitree_rl_gym
+
+---
+
+## 🔧 Key Technical Changes
+
+This fork required significant modifications to make Mujoco work with the rsl_rl training pipeline:
+
+### 1. **Model Loading System**
+- **Challenge**: URDF files don't create Mujoco actuators automatically
+- **Solution**: Auto-detect and prefer pre-compiled XML files with explicit actuators
+- **Impact**: Proper PD control with correct torque limits
+
+### 2. **Observation Format**
+- **Challenge**: rsl_rl expects dictionary observations, not separate tensors
+- **Solution**: Created `ObservationDict` class with `.to(device)` method
+- **Impact**: Separate policy/critic observations (asymmetric actor-critic)
+
+### 3. **Configuration System**
+- **Challenge**: rsl_rl needs both nested sections AND flat keys
+- **Solution**: Hybrid config structure with explicit `class_name` mapping
+- **Impact**: Compatible with rsl_rl's dynamic class instantiation
+
+### 4. **DOF Detection**
+- **Challenge**: Inconsistent joint counting between URDF and config
+- **Solution**: Multi-level fallback (actuators → joints → config validation)
+- **Impact**: Robust handling of different robot models
+
+### 5. **Isaac Gym Independence**
+- **Challenge**: Many imports assumed Isaac Gym was installed
+- **Solution**: Optional imports with fallback implementations for critical functions
+- **Impact**: Works in any Python environment (Colab, local, Docker)
+
+### 6. **Environment Interface**
+- **Challenge**: `step()` and `reset()` return format mismatch
+- **Solution**: Return observation dicts instead of separate obs/privileged_obs
+- **Impact**: Compatible with standard rsl_rl training loop
+
+See [FIXES_APPLIED.md](FIXES_APPLIED.md) for detailed documentation of all fixes.
 
 ---
 

@@ -56,11 +56,11 @@ class MujocoG1RoughCfgPPO(G1RoughCfgPPO):
         algorithm_class_name = 'PPO'  # From LeggedRobotCfgPPO
         num_steps_per_env = 24  # From LeggedRobotCfgPPO
 
-        # Mujoco-specific overrides
+        # Mujoco-specific overrides for Colab
         experiment_name = 'g1_colab_training'
         run_name = 'run_001'
-        max_iterations = 10000
-        save_interval = 500
+        max_iterations = 1000  # ~3.5 hours on T4 GPU (can stop early or resume)
+        save_interval = 50  # Save every ~100 minutes (~1.7 hours)
 
         # Resume settings (from base)
         resume = False
