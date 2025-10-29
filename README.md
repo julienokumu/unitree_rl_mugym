@@ -1,516 +1,177 @@
-# Unitree RL MuGym
+<div align="center">
+  <h1 align="center">Unitree RL GYM</h1>
+  <p align="center">
+    <span> 🌎English </span> | <a href="README_zh.md"> 🇨🇳中文 </a>
+  </p>
+</div>
 
-**Mujoco-based Reinforcement Learning for Unitree Robots - Train on Google Colab, Visualize Locally**
+<p align="center">
+  <strong>Reinforcement learning for Unitree robots (Go2, H1, H1_2, G1) with Isaac Gym and Mujoco support.</strong>
+</p>
 
-This is a modified version of [Unitree RL Gym](https://github.com/unitreerobotics/unitree_rl_gym) that replaces Isaac Gym with Mujoco for training. The key advantage: **train policies on Google Colab without requiring a local GPU**, then visualize them locally with Mujoco.
+<p align="center">
+  ✨ <strong>Now with Google Colab training support - train without a local GPU!</strong> ✨
+</p>
 
----
+<div align="center">
 
-## 🎯 Key Features
+| <div align="center"> Isaac Gym </div> | <div align="center">  Mujoco </div> |  <div align="center"> Physical </div> |
+|--- | --- | --- |
+| [<img src="https://oss-global-cdn.unitree.com/static/32f06dc9dfe4452dac300dda45e86b34.GIF" width="240px">](https://oss-global-cdn.unitree.com/static/5bbc5ab1d551407080ca9d58d7bec1c8.mp4) | [<img src="https://oss-global-cdn.unitree.com/static/244cd5c4f823495fbfb67ef08f56aa33.GIF" width="240px">](https://oss-global-cdn.unitree.com/static/5aa48535ffd641e2932c0ba45c8e7854.mp4) | [<img src="https://oss-global-cdn.unitree.com/static/78c61459d3ab41448cfdb31f6a537e8b.GIF" width="240px">](https://oss-global-cdn.unitree.com/static/0818dcf7a6874b92997354d628adcacd.mp4) |
 
-- ✅ **No Local GPU Required** - Train on Google Colab's free GPUs
-- ✅ **No Isaac Gym Dependency** - Uses Mujoco physics (CPU-friendly)
-- ✅ **Colab-Compatible** - Works in Jupyter notebooks with free tier
-- ✅ **Local Visualization** - Render policies on any machine with Mujoco
-- ✅ **Same Algorithm** - Uses proven RSL-RL PPO implementation
-- ✅ **Easy Setup** - Single `pip install` for dependencies
-
----
-
-## 📖 Background
-
-### Original Framework: Unitree RL Gym
-
-This repository is based on [Unitree RL Gym](https://github.com/unitreerobotics/unitree_rl_gym), an excellent framework for training locomotion policies on Unitree robots using Isaac Gym.
-
-**Original Features:**
-- Isaac Gym-based training (4096 parallel environments on GPU)
-- Supports Go2, H1, H1_2, G1 robots
-- Sim2Real deployment
-- Pre-trained models
-
-**Limitations:**
-- Requires local GPU with Isaac Gym
-- Isaac Gym doesn't work on Google Colab
-- Isaac Gym is legacy (superseded by Isaac Lab)
-
-### Our Modification: Unitree RL MuGym
-
-We've extended the framework with **Mujoco-based training environments** that:
-- Run on Google Colab (no local GPU needed)
-- Use Mujoco physics instead of Isaac Gym
-- Support CPU training (slower but accessible)
-- Maintain compatibility with the original deployment pipeline
-
-**What's New:**
-- `MujocoLeggedRobot` - Base Mujoco environment class with rsl_rl compatibility
-- `MujocoG1Robot` - G1-specific Mujoco implementation with phase-based gait
-- `train_mujoco.py` - Colab-compatible training script with robust config handling
-- `train_g1_mujoco_colab.ipynb` - Complete Colab notebook with step-by-step instructions
-- `ObservationDict` - Custom dict class supporting `.to(device)` for rsl_rl
-- Optional Isaac Gym imports - Framework works without Isaac Gym installed
-- Fallback math functions - Pure PyTorch implementations of Isaac Gym utilities
-
-**Technical Improvements:**
-- ✅ XML model loading (URDF → Mujoco XML with proper actuators)
-- ✅ Dictionary-based observations (policy/critic groups for rsl_rl)
-- ✅ Hybrid config structure (both nested and flat for rsl_rl compatibility)
-- ✅ Robust DOF detection (actuators → joints → config validation)
-- ✅ PD control mapping (automatic gain assignment from config)
-- ✅ Phase-based rewards (encouraging natural bipedal gait)
-
-**What's Preserved:**
-- Original Isaac Gym environments (still work if you have local GPU)
-- Deployment scripts (Sim2Sim, Sim2Real)
-- Configuration system and hyperparameters
-- Reward functions and observation spaces
-- Pre-trained models and checkpoint formats
+</div>
 
 ---
 
-## 🚀 Quick Start
+## 🆕 What's New
 
-### Option 1: Train on Google Colab (Recommended)
+This fork adds **Mujoco-based training for Google Colab**, enabling training without a local GPU:
 
-1. **Open Colab Notebook**
-   - Upload `notebooks/train_g1_mujoco_colab.ipynb` to [Google Colab](https://colab.research.google.com/)
-   - Or open directly: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/julienokumu/unitree_rl_mugym/blob/main/notebooks/train_g1_mujoco_colab.ipynb)
-
-2. **Select GPU Runtime**
-   - Go to `Runtime > Change runtime type > Hardware accelerator > GPU (T4)`
-   - Free tier provides ~13 hours of training time
-
-3. **Run All Cells**
-   - Training takes ~13 hours for 10,000 iterations (can stop earlier)
-   - Checkpoints saved every 500 iterations
-   - TensorBoard available for real-time monitoring
-   - Models automatically downloadable
-
-4. **Visualize Locally**
-   ```bash
-   # Install on local machine
-   pip install mujoco==3.2.3 torch pyyaml
-
-   # Run visualization
-   python deploy/deploy_mujoco/deploy_mujoco.py g1.yaml \
-       --policy /path/to/downloaded/model.pt
-   ```
-
-### Option 2: Train Locally (If You Have CPU/GPU)
-
-```bash
-# Clone repository
-git clone https://github.com/julienokumu/unitree_rl_mugym.git
-cd unitree_rl_mugym
-
-# Install dependencies (Mujoco-only, no Isaac Gym)
-pip install mujoco==3.2.3 scipy pyyaml tensorboard rsl-rl-lib torch
-pip install -e .
-
-# Train policy
-python legged_gym/scripts/train_mujoco.py \
-    --task g1_mujoco \
-    --num_envs 256 \
-    --max_iterations 10000 \
-    --device cpu  # or 'cuda' if you have GPU
-
-# Visualize
-python deploy/deploy_mujoco/deploy_mujoco.py g1.yaml
-```
-
----
-
-## 📚 Documentation
-
-- **[COLAB_TRAINING.md](COLAB_TRAINING.md)** - Complete guide for Colab training workflow
-- **[README_ORIGINAL.md](README_ORIGINAL.md)** - Original Unitree RL Gym documentation
-- **[Notebooks](notebooks/)** - Jupyter notebooks for training
-
----
-
-## 🤖 Supported Robots
-
-| Robot | Mujoco Support | Isaac Gym Support | DOF | Type |
-|-------|---------------|-------------------|-----|------|
-| **G1** | ✅ Yes | ✅ Yes | 12 | Humanoid |
-| **H1** | 🚧 Coming Soon | ✅ Yes | 12 | Humanoid |
-| **H1_2** | 🚧 Coming Soon | ✅ Yes | 12 | Humanoid |
-| **Go2** | 🚧 Coming Soon | ✅ Yes | 12 | Quadruped |
-
-Currently, only **G1** has Mujoco support. Other robots can be added by following the implementation pattern.
+- ✅ Train on Google Colab free tier (T4 GPU)
+- ✅ No Isaac Gym installation required for training
+- ✅ Visualize trained policies locally with Mujoco
+- ✅ Resume training across multiple Colab sessions
+- ✅ [Ready-to-use Colab notebook](notebooks/train_g1_mujoco_colab.ipynb)
 
 ---
 
 ## 📦 Installation
 
-### For Colab Training (Minimal)
+### Option 1: Google Colab Training (No Local GPU Required)
 
-```bash
-# In Colab notebook
-!pip install mujoco==3.2.3 scipy pyyaml tensorboard rsl-rl
-!git clone https://github.com/julienokumu/unitree_rl_mugym.git
-!pip install -e unitree_rl_mugym --no-deps
-```
+1. **Open the Colab Notebook**: [train_g1_mujoco_colab.ipynb](notebooks/train_g1_mujoco_colab.ipynb)
+2. **Enable GPU**: `Runtime > Change runtime type > GPU (T4)`
+3. **Run all cells** - training takes ~2 hours per 50 iterations
+4. **Download trained policy** and visualize locally
 
-### For Local Use (Full)
-
-```bash
-# Clone repository
-git clone https://github.com/julienokumu/unitree_rl_mugym.git
-cd unitree_rl_mugym
-
-# Install Mujoco-only dependencies
-pip install mujoco==3.2.3 scipy pyyaml tensorboard rsl-rl-lib torch matplotlib numpy==1.20
-pip install -e .
-
-# Or install everything (including Isaac Gym if you have it)
-pip install -e .
-```
-
-### For Local Visualization Only
-
+**Local visualization only** (no training):
 ```bash
 pip install mujoco==3.2.3 torch pyyaml numpy
+python deploy/deploy_mujoco/deploy_mujoco.py g1.yaml --policy /path/to/downloaded/policy_1.pt
 ```
+
+### Option 2: Local Training (Isaac Gym)
+
+For full Isaac Gym setup, see [setup.md](/doc/setup_en.md).
 
 ---
 
-## 🎓 How It Works
+## 🔁 Workflow
 
-### Training Flow (Mujoco)
+`Train` → `Play` → `Sim2Sim` → `Sim2Real`
 
-```
-┌─────────────────────────────────────────┐
-│  Google Colab / Local Machine           │
-│                                         │
-│  ┌─────────────────────────────────┐   │
-│  │ MujocoG1Robot (256-512 envs)   │   │
-│  │  - Mujoco physics simulation    │   │
-│  │  - Vectorized CPU/GPU           │   │
-│  │  - Same rewards as Isaac Gym   │   │
-│  └──────────────┬──────────────────┘   │
-│                 ↓                       │
-│  ┌─────────────────────────────────┐   │
-│  │ RSL-RL PPO Algorithm            │   │
-│  │  - Policy network (LSTM)        │   │
-│  │  - Value network                │   │
-│  │  - 10k iterations (~2-6 hours) │   │
-│  └──────────────┬──────────────────┘   │
-│                 ↓                       │
-│  ┌─────────────────────────────────┐   │
-│  │ Trained Policy (TorchScript)    │   │
-│  │  - model_10000.pt               │   │
-│  └─────────────────────────────────┘   │
-└─────────────────────────────────────────┘
-              ↓ Download
-┌─────────────────────────────────────────┐
-│  Local Machine (Visualization)          │
-│                                         │
-│  ┌─────────────────────────────────┐   │
-│  │ Mujoco Viewer                   │   │
-│  │  - Load trained policy          │   │
-│  │  - Render robot walking         │   │
-│  │  - Real-time visualization      │   │
-│  └─────────────────────────────────┘   │
-└─────────────────────────────────────────┘
-```
+- **Train**: Train policy in simulation (Isaac Gym or Mujoco)
+- **Play**: Visualize and verify trained policy
+- **Sim2Sim**: Test policy in different simulators
+- **Sim2Real**: Deploy to physical robot
 
 ---
 
-## 📊 Performance Comparison
+## 🛠️ Usage
 
-| Setup | Environments | Time (10k iter) | Hardware |
-|-------|-------------|-----------------|----------|
-| **Isaac Gym** | 4096 | 2-4 hours | Local GPU (required) |
-| **Mujoco (CPU)** | 256 | 6-10 hours | Any CPU (Colab free) |
-| **Mujoco (T4 GPU)** | 512 | 2-4 hours | Colab free GPU |
-| **Mujoco (A100 GPU)** | 1024 | 1-2 hours | Colab Pro |
+### 1. Training
 
-**Trade-off:** Mujoco is slower but accessible anywhere without local GPU.
-
----
-
-## 🎮 Usage Examples
-
-### Training
-
+#### Mujoco Training (Colab/Local)
 ```bash
-# Quick test (5 minutes)
-python legged_gym/scripts/train_mujoco.py \
-    --num_envs 64 \
-    --max_iterations 100 \
-    --device cpu
-
-# Full training on CPU
-python legged_gym/scripts/train_mujoco.py \
-    --task g1_mujoco \
-    --num_envs 256 \
-    --max_iterations 10000 \
-    --device cpu \
-    --experiment_name my_g1_training
-
-# Full training on GPU (faster)
-python legged_gym/scripts/train_mujoco.py \
-    --task g1_mujoco \
-    --num_envs 512 \
-    --max_iterations 10000 \
-    --device cuda \
-    --experiment_name my_g1_training
-
-# Resume from checkpoint
-python legged_gym/scripts/train_mujoco.py \
-    --resume \
-    --load_run Feb15_10-30-45_my_run \
-    --checkpoint 5000
+python legged_gym/scripts/train_mujoco.py --task=g1_mujoco
 ```
 
-### Visualization
+**Parameters:**
+- `--device`: `cuda` or `cpu`
+- `--num_envs`: Number of parallel environments (default: 512)
+- `--max_iterations`: Training iterations (default: 1000)
+- `--resume`: Resume from latest checkpoint
 
+**Training tips:**
+- 50-100 iterations: Basic coordination emerges (~2-4 hours on T4)
+- 500 iterations: Stable walking policy (~20 hours, use resume)
+- 1000+ iterations: Robust, efficient walking
+
+#### Isaac Gym Training (Local Only)
 ```bash
-# Use pre-trained model
+python legged_gym/scripts/train.py --task=g1
+```
+
+**Parameters:**
+- `--task`: Robot type (go2, g1, h1, h1_2)
+- `--headless`: Run without GUI (faster)
+- `--resume`: Resume training
+- `--experiment_name`, `--run_name`: Organize experiments
+- `--num_envs`: Parallel environments
+- `--max_iterations`: Training iterations
+
+**Models saved to**: `logs/<experiment_name>/<date_time>_<run_name>/model_<iteration>.pt`
+
+---
+
+### 2. Play (Visualization in Gym)
+
+Visualize training results:
+```bash
+python legged_gym/scripts/play.py --task=g1
+```
+
+**Exports policy** to `logs/{experiment_name}/exported/policies/policy_1.pt` for deployment.
+
+---
+
+### 3. Sim2Sim (Mujoco)
+
+Test policy in Mujoco simulator:
+```bash
 python deploy/deploy_mujoco/deploy_mujoco.py g1.yaml
-
-# Use custom trained model
-python deploy/deploy_mujoco/deploy_mujoco.py g1.yaml \
-    --policy logs/g1_mujoco/Feb15_10-30-45/model_10000.pt
-
-# Run for longer duration
-python deploy/deploy_mujoco/deploy_mujoco.py g1.yaml \
-    --policy my_model.pt \
-    --duration 120
 ```
 
-### Monitoring
-
+**Custom policy:**
 ```bash
-# Launch TensorBoard
-tensorboard --logdir logs/g1_mujoco/
-
-# Monitor specific run
-tensorboard --logdir logs/g1_mujoco/Feb15_10-30-45_my_run/
+python deploy/deploy_mujoco/deploy_mujoco.py g1.yaml --policy /path/to/policy_1.pt
 ```
+
+**Configuration:** Edit `deploy/deploy_mujoco/configs/g1.yaml` to customize policy path, control parameters, etc.
+
+#### Mujoco Simulation Results
+
+| G1 | H1 | H1_2 |
+|--- | --- | --- |
+| [![mujoco_g1](https://oss-global-cdn.unitree.com/static/244cd5c4f823495fbfb67ef08f56aa33.GIF)](https://oss-global-cdn.unitree.com/static/5aa48535ffd641e2932c0ba45c8e7854.mp4)  |  [![mujoco_h1](https://oss-global-cdn.unitree.com/static/7ab4e8392e794e01b975efa205ef491e.GIF)](https://oss-global-cdn.unitree.com/static/8934052becd84d08bc8c18c95849cf32.mp4)  |  [![mujoco_h1_2](https://oss-global-cdn.unitree.com/static/2905e2fe9b3340159d749d5e0bc95cc4.GIF)](https://oss-global-cdn.unitree.com/static/ee7ee85bd6d249989a905c55c7a9d305.mp4) |
 
 ---
 
-## 🛠️ Project Structure
+### 4. Sim2Real (Physical Robot)
 
-```
-unitree_rl_mugym/
-├── legged_gym/
-│   ├── envs/
-│   │   ├── base/
-│   │   │   ├── mujoco_legged_robot.py    # 🆕 Mujoco base class
-│   │   │   └── legged_robot.py           # Original Isaac Gym
-│   │   ├── g1/
-│   │   │   ├── mujoco_g1_env.py          # 🆕 Mujoco G1
-│   │   │   ├── mujoco_g1_config.py       # 🆕 Config
-│   │   │   ├── g1_env.py                 # Original
-│   │   │   └── g1_config.py              # Original
-│   │   └── [h1, h1_2, go2]/              # Original robots
-│   └── scripts/
-│       ├── train_mujoco.py               # 🆕 Mujoco training
-│       ├── train.py                      # Original Isaac Gym
-│       └── play.py                       # Original
-├── deploy/
-│   ├── deploy_mujoco/
-│   │   ├── deploy_mujoco.py              # ✨ Enhanced
-│   │   └── configs/
-│   │       └── g1.yaml
-│   ├── deploy_real/                      # Original (works with both)
-│   └── pre_train/                        # Pre-trained models
-├── notebooks/
-│   └── train_g1_colab.ipynb              # 🆕 Colab notebook
-├── resources/                             # Robot URDFs and meshes
-├── COLAB_TRAINING.md                      # 🆕 Complete guide
-├── README.md                              # 🆕 This file
-└── README_ORIGINAL.md                     # Original documentation
-```
-
-**Legend:**
-- 🆕 New files added in this fork
-- ✨ Enhanced/modified existing files
-- No icon = Original files from unitree_rl_gym
-
----
-
-## 🔧 Key Technical Changes
-
-This fork required significant modifications to make Mujoco work with the rsl_rl training pipeline:
-
-### 1. **Model Loading System**
-- **Challenge**: URDF files don't create Mujoco actuators automatically
-- **Solution**: Auto-detect and prefer pre-compiled XML files with explicit actuators
-- **Impact**: Proper PD control with correct torque limits
-
-### 2. **Observation Format**
-- **Challenge**: rsl_rl expects dictionary observations, not separate tensors
-- **Solution**: Created `ObservationDict` class with `.to(device)` method
-- **Impact**: Separate policy/critic observations (asymmetric actor-critic)
-
-### 3. **Configuration System**
-- **Challenge**: rsl_rl needs both nested sections AND flat keys
-- **Solution**: Hybrid config structure with explicit `class_name` mapping
-- **Impact**: Compatible with rsl_rl's dynamic class instantiation
-
-### 4. **DOF Detection**
-- **Challenge**: Inconsistent joint counting between URDF and config
-- **Solution**: Multi-level fallback (actuators → joints → config validation)
-- **Impact**: Robust handling of different robot models
-
-### 5. **Isaac Gym Independence**
-- **Challenge**: Many imports assumed Isaac Gym was installed
-- **Solution**: Optional imports with fallback implementations for critical functions
-- **Impact**: Works in any Python environment (Colab, local, Docker)
-
-### 6. **Environment Interface**
-- **Challenge**: `step()` and `reset()` return format mismatch
-- **Solution**: Return observation dicts instead of separate obs/privileged_obs
-- **Impact**: Compatible with standard rsl_rl training loop
-
-See [FIXES_APPLIED.md](FIXES_APPLIED.md) for detailed documentation of all fixes.
-
----
-
-## 🔍 Differences from Original
-
-| Feature | Original (Isaac Gym) | This Fork (Mujoco) |
-|---------|---------------------|-------------------|
-| **Training Backend** | Isaac Gym (GPU only) | Mujoco (CPU/GPU) |
-| **Colab Support** | ❌ No | ✅ Yes |
-| **Local GPU Required** | ✅ Yes | ❌ No |
-| **Parallel Envs** | 4096 | 256-1024 |
-| **Training Speed** | Very Fast | Moderate |
-| **Installation** | Complex | Simple (pip) |
-| **Platform** | Linux only | Cross-platform |
-| **Deployment** | ✅ Same | ✅ Same |
-| **Pre-trained Models** | ✅ Compatible | ✅ Compatible |
-
-**Both versions share:**
-- Same PPO algorithm (rsl_rl)
-- Same reward functions
-- Same observation/action spaces
-- Same deployment pipeline
-- Compatible model formats
-
----
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-**Out of Memory on Colab:**
-```python
-# Reduce number of environments
-NUM_ENVS = 128  # or 64
-```
-
-**Policy Not Loading:**
+Deploy trained policy to physical robot (requires robot in debug mode):
 ```bash
-# Check model file exists
-ls -lh path/to/model.pt
-
-# Use absolute path
-python deploy/deploy_mujoco/deploy_mujoco.py g1.yaml \
-    --policy /absolute/path/to/model.pt
+python deploy/deploy_real/deploy_real.py {net_interface} {config_name}
 ```
 
-**Robot Falls Immediately:**
-- Policy may need more training iterations
-- Check observation/action dimensions match
-- Verify PD gains in config file
+**Parameters:**
+- `net_interface`: Network interface name (e.g., `eth0`, `enp3s0`)
+- `config_name`: Config file (e.g., `g1.yaml`, `h1.yaml`)
 
-**Mujoco Import Error:**
-```bash
-# Reinstall Mujoco
-pip uninstall mujoco
-pip install mujoco==3.2.3
+See [Physical Deployment Guide](deploy/deploy_real/README.md) for details.
 
-# On Linux, install system dependencies
-sudo apt-get install libglfw3 libgl1-mesa-glx libosmesa6
-```
+#### Deployment Results
 
-See [COLAB_TRAINING.md](COLAB_TRAINING.md) for more troubleshooting tips.
+| G1 | H1 | H1_2 |
+|--- | --- | --- |
+| [![real_g1](https://oss-global-cdn.unitree.com/static/78c61459d3ab41448cfdb31f6a537e8b.GIF)](https://oss-global-cdn.unitree.com/static/0818dcf7a6874b92997354d628adcacd.mp4) | [![real_h1](https://oss-global-cdn.unitree.com/static/fa07b2fd2ad64bb08e6b624d39336245.GIF)](https://oss-global-cdn.unitree.com/static/ea0084038d384e3eaa73b961f33e6210.mp4) | [![real_h1_2](https://oss-global-cdn.unitree.com/static/a88915e3523546128a79520aa3e20979.GIF)](https://oss-global-cdn.unitree.com/static/12d041a7906e489fae79d55b091a63dd.mp4) |
 
 ---
 
-## 🤝 Contributing
+## 🎉 Acknowledgments
 
-Contributions are welcome! Areas where we'd love help:
+Built upon these excellent open-source projects:
 
-1. **Add Mujoco support for other robots** (H1, H1_2, Go2)
-2. **Improve training efficiency** (better vectorization, GPU utilization)
-3. **Add terrain support** (heightfield, curriculum learning)
-4. **Enhance visualization** (keyboard controls, better camera)
-5. **Documentation improvements**
-
-### How to Contribute
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/awesome-feature`)
-3. Commit your changes (`git commit -m 'Add awesome feature'`)
-4. Push to the branch (`git push origin feature/awesome-feature`)
-5. Open a Pull Request
+- [legged_gym](https://github.com/leggedrobotics/legged_gym): Training framework
+- [rsl_rl](https://github.com/leggedrobotics/rsl_rl.git): RL algorithms
+- [mujoco](https://github.com/google-deepmind/mujoco.git): Physics simulation
+- [unitree_sdk2_python](https://github.com/unitreerobotics/unitree_sdk2_python.git): Hardware interface
+- [unitree_rl_gym](https://github.com/unitreerobotics/unitree_rl_gym): Original repository
 
 ---
 
-## 📝 Citation
+## 🔖 License
 
-### This Repository (Unitree RL MuGym)
+This project is licensed under the [BSD 3-Clause License](./LICENSE).
 
-```bibtex
-@software{unitree_rl_mugym2025,
-  title={Unitree RL MuGym: Mujoco-based Training for Unitree Robots},
-  author={Your Name},
-  year={2025},
-  url={https://github.com/julienokumu/unitree_rl_mugym},
-  note={Extended from Unitree RL Gym with Mujoco support for Google Colab training}
-}
-```
-
-### Original Framework (Unitree RL Gym)
-
-```bibtex
-@software{unitree_rl_gym2024,
-  title={Unitree RL Gym},
-  author={Unitree Robotics},
-  year={2024},
-  url={https://github.com/unitreerobotics/unitree_rl_gym}
-}
-```
-
-### Dependencies
-
-- **Mujoco**: [MuJoCo Documentation](https://mujoco.readthedocs.io/)
-- **RSL-RL**: [RSL-RL Repository](https://github.com/leggedrobotics/rsl_rl)
-- **Isaac Gym** (original): [NVIDIA Isaac Gym](https://developer.nvidia.com/isaac-gym)
-
----
-
-## 🙏 Acknowledgments
-
-- **Unitree Robotics** - For the original [unitree_rl_gym](https://github.com/unitreerobotics/unitree_rl_gym) framework
-- **RSL Lab (ETH Zurich)** - For the [rsl_rl](https://github.com/leggedrobotics/rsl_rl) PPO implementation
-- **DeepMind/Google** - For [Mujoco](https://mujoco.org/) physics engine
-- **NVIDIA** - For Isaac Gym (used in original framework)
-
----
-
-## 📄 License
-
-This project maintains the same license as the original Unitree RL Gym: **BSD-3-Clause**
-
-See [LICENSE](LICENSE) for details.
-
----
-
-## 📧 Contact
-
-- **Issues**: [GitHub Issues](https://github.com/julienokumu/unitree_rl_mugym/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/julienokumu/unitree_rl_mugym/discussions)
-- **Original Framework**: [Unitree RL Gym Issues](https://github.com/unitreerobotics/unitree_rl_gym/issues)
-
----
-
-**Happy Training! 🤖**
-
-Train anywhere, deploy everywhere.
+For details, please read the full [LICENSE file](./LICENSE).
