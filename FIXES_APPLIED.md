@@ -4,7 +4,28 @@ This document tracks all the fixes applied to make the framework work on Google 
 
 ## Latest Fixes (Ready for Testing)
 
-### 1. Config Structure - Hybrid Nested+Flat (Commit: 5a899c7)
+### 1. Observation Format for rsl_rl (Commit: e03d2a0)
+**Problem:** `RuntimeError: Tensor.__contains__ only supports Tensor or scalar`
+- rsl_rl's `resolve_obs_groups` tries to check `if "policy" in obs`
+- Our environment returned plain Tensors, but rsl_rl expects observation dictionaries
+- Newer rsl_rl versions expect observations grouped as: `{"policy": tensor, "critic": tensor}`
+
+**Solution:** Modified `get_observations()` to return dictionary format:
+```python
+{
+    "policy": self.obs_buf,       # Policy network observations
+    "critic": self.privileged_obs_buf  # Critic network observations (privileged)
+}
+```
+Set `obs_groups = None` to tell rsl_rl to use dict keys as groups.
+
+**Files:**
+- `legged_gym/envs/base/mujoco_legged_robot.py`
+- `legged_gym/scripts/train_mujoco.py`
+
+**Impact:** Observations now in correct dictionary format that rsl_rl expects.
+
+### 2. Config Structure - Hybrid Nested+Flat (Commit: 5a899c7)
 **Problem:** `KeyError: 'algorithm'` after flattening config.
 - rsl_rl OnPolicyRunner actually expects BOTH structures:
   - Flat keys at top level: `cfg["num_steps_per_env"]`
@@ -149,7 +170,10 @@ When testing on Colab, verify:
 ## Commit History
 
 ```
-5a899c7 - Fix config: provide both nested sections AND flat keys for rsl_rl (CRITICAL FIX)
+e03d2a0 - Fix observation format: return dict with policy/critic groups for rsl_rl (CRITICAL FIX)
+68ca974 - Add obs_groups and privileged_obs_groups to config defaults
+debc766 - Update documentation with hybrid config structure fix
+5a899c7 - Fix config: provide both nested sections AND flat keys for rsl_rl
 eb36e16 - Update documentation with config flattening fix
 5af20a8 - Fix config structure: flatten nested configs for rsl_rl runner
 81c1b9e - Add robust config validation and fallbacks for rsl_rl runner
